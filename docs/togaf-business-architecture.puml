@@ -1,0 +1,73 @@
+@startuml TOGAF业务架构视图
+!theme plain
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 12
+
+title TOGAF业务架构视图 - Apache Flink
+
+package "业务能力层" {
+  component [流处理能力] as StreamProcessing
+  component [批处理能力] as BatchProcessing
+  component [实时分析能力] as RealTimeAnalytics
+  component [事件驱动处理] as EventDriven
+}
+
+package "业务流程层" {
+  component [数据摄取流程] as DataIngestion
+  component [数据处理流程] as DataProcessing
+  component [结果输出流程] as DataOutput
+  component [状态管理流程] as StateManagement
+}
+
+package "业务价值层" {
+  component [低延迟处理] as LowLatency
+  component [高吞吐量] as HighThroughput
+  component [容错性] as FaultTolerance
+  component [精确一次语义] as ExactlyOnce
+}
+
+' 业务能力到流程的关系
+StreamProcessing --> DataIngestion
+StreamProcessing --> DataProcessing
+StreamProcessing --> DataOutput
+BatchProcessing --> DataProcessing
+BatchProcessing --> DataOutput
+RealTimeAnalytics --> DataProcessing
+EventDriven --> DataProcessing
+
+' 流程到价值的关系
+DataIngestion --> LowLatency
+DataProcessing --> HighThroughput
+DataProcessing --> LowLatency
+DataOutput --> LowLatency
+StateManagement --> FaultTolerance
+StateManagement --> ExactlyOnce
+DataProcessing --> FaultTolerance
+
+note right of StreamProcessing
+  支持无界数据流的
+  实时处理能力
+end note
+
+note right of BatchProcessing
+  支持有界数据集的
+  高效批处理能力
+end note
+
+note right of RealTimeAnalytics
+  支持实时数据分析和
+  复杂事件处理
+end note
+
+note right of FaultTolerance
+  通过检查点和恢复机制
+  保证系统可靠性
+end note
+
+note right of ExactlyOnce
+  保证数据处理的一致性
+  和准确性
+end note
+
+@enduml

@@ -1,0 +1,129 @@
+@startuml TOGAF技术架构视图
+!theme plain
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+
+title TOGAF技术架构视图 - Apache Flink
+
+package "部署模式层" {
+  component [Standalone模式] as Standalone
+  component [YARN部署] as YARN
+  component [Kubernetes部署] as Kubernetes
+  component [Docker容器] as Docker
+  component [Mesos部署] as Mesos
+}
+
+package "集群管理层" {
+  component [Job Manager] as JobManager
+  component [Task Manager] as TaskManager
+  component [Resource Manager] as ResourceManager
+  component [Dispatcher] as Dispatcher
+  component [High Availability] as HA
+}
+
+package "资源管理层" {
+  component [内存管理] as MemoryMgmt
+  component [CPU调度] as CPUScheduling
+  component [网络管理] as NetworkMgmt
+  component [Slot分配] as SlotAllocation
+}
+
+package "监控运维层" {
+  component [Metrics系统] as Metrics
+  component [Web Dashboard] as WebDashboard
+  component [日志系统] as Logging
+  component [告警系统] as Alerting
+  component [性能监控] as PerformanceMonitor
+}
+
+package "开发工具层" {
+  component [测试框架] as TestFramework
+  component [示例代码] as Examples
+  component [开发工具] as DevTools
+  component [IDE插件] as IDEPlugins
+}
+
+package "基础设施层" {
+  component [JVM运行时] as JVM
+  component [操作系统] as OS
+  component [网络基础设施] as NetworkInfra
+  component [存储基础设施] as StorageInfra
+}
+
+' 部署模式到集群管理
+Standalone --> JobManager
+Standalone --> TaskManager
+YARN --> ResourceManager
+YARN --> JobManager
+Kubernetes --> ResourceManager
+Kubernetes --> JobManager
+Docker --> JobManager
+Mesos --> ResourceManager
+
+' 集群管理内部
+JobManager --> Dispatcher
+JobManager --> ResourceManager
+ResourceManager --> TaskManager
+JobManager --> HA
+TaskManager --> HA
+
+' 集群管理到资源管理
+ResourceManager --> MemoryMgmt
+ResourceManager --> CPUScheduling
+ResourceManager --> NetworkMgmt
+ResourceManager --> SlotAllocation
+TaskManager --> MemoryMgmt
+TaskManager --> CPUScheduling
+
+' 集群管理到监控
+JobManager --> Metrics
+TaskManager --> Metrics
+JobManager --> WebDashboard
+TaskManager --> Logging
+Metrics --> Alerting
+Metrics --> PerformanceMonitor
+
+' 开发工具
+TestFramework --> JobManager
+Examples --> JobManager
+DevTools --> JobManager
+
+' 基础设施支撑
+JVM --> JobManager
+JVM --> TaskManager
+OS --> JVM
+NetworkInfra --> NetworkMgmt
+StorageInfra --> MemoryMgmt
+
+note right of Standalone
+  独立部署模式
+  适合开发和测试
+end note
+
+note right of Kubernetes
+  Kubernetes原生支持
+  云原生部署
+end note
+
+note right of HA
+  高可用配置支持
+  ZooKeeper/Kubernetes
+end note
+
+note right of Metrics
+  集成Prometheus、
+  InfluxDB等监控系统
+end note
+
+note right of WebDashboard
+  提供实时作业监控
+  和任务管理界面
+end note
+
+note right of JVM
+  基于JVM运行
+  支持Java 11/17/21
+end note
+
+@enduml

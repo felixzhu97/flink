@@ -1,0 +1,109 @@
+@startuml TOGAF应用架构视图
+!theme plain
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+
+title TOGAF应用架构视图 - Apache Flink
+
+package "API层" {
+  component [Core API] as CoreAPI
+  component [DataStream API] as DataStreamAPI
+  component [Table API] as TableAPI
+  component [Python API] as PythonAPI
+  component [SQL API] as SQLAPI
+}
+
+package "运行时层" {
+  component [Runtime Core] as RuntimeCore
+  component [Streaming Runtime] as StreamingRuntime
+  component [State Backends] as StateBackends
+  component [Checkpoint Coordinator] as CheckpointCoord
+  component [Job Manager] as JobManager
+  component [Task Manager] as TaskManager
+}
+
+package "连接器层" {
+  component [Source Connectors] as SourceConnectors
+  component [Sink Connectors] as SinkConnectors
+  component [Data Formats] as DataFormats
+  component [Serialization] as Serialization
+}
+
+package "客户端层" {
+  component [Cluster Client] as ClusterClient
+  component [Web UI] as WebUI
+  component [REST API] as RESTAPI
+  component [CLI] as CLI
+}
+
+package "库和扩展层" {
+  component [Metrics Library] as MetricsLib
+  component [RPC Framework] as RPCFramework
+  component [File Systems] as FileSystems
+  component [Queryable State] as QueryableState
+  component [Libraries] as Libraries
+}
+
+' API层到运行时层
+CoreAPI --> RuntimeCore
+DataStreamAPI --> StreamingRuntime
+TableAPI --> StreamingRuntime
+PythonAPI --> StreamingRuntime
+SQLAPI --> TableAPI
+
+' 运行时层内部关系
+RuntimeCore --> JobManager
+RuntimeCore --> TaskManager
+StreamingRuntime --> RuntimeCore
+StreamingRuntime --> StateBackends
+StreamingRuntime --> CheckpointCoord
+JobManager --> TaskManager
+StateBackends --> CheckpointCoord
+
+' 运行时层到连接器层
+StreamingRuntime --> SourceConnectors
+StreamingRuntime --> SinkConnectors
+SourceConnectors --> DataFormats
+SinkConnectors --> DataFormats
+DataFormats --> Serialization
+
+' 客户端层到运行时层
+ClusterClient --> JobManager
+WebUI --> RESTAPI
+RESTAPI --> JobManager
+CLI --> ClusterClient
+
+' 库和扩展层关系
+RuntimeCore --> MetricsLib
+RuntimeCore --> RPCFramework
+RuntimeCore --> FileSystems
+StreamingRuntime --> QueryableState
+RuntimeCore --> Libraries
+
+note right of CoreAPI
+  核心API提供基础
+  抽象和类型系统
+end note
+
+note right of StreamingRuntime
+  流处理运行时引擎
+  负责任务调度和执行
+end note
+
+note right of StateBackends
+  状态后端支持多种
+  存储策略（内存、RocksDB等）
+end note
+
+note right of SourceConnectors
+  支持Kafka、文件系统、
+  数据库等多种数据源
+end note
+
+note right of WebUI
+  提供Web界面用于
+  监控和管理作业
+end note
+
+@enduml

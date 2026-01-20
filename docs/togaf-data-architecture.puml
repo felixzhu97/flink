@@ -1,0 +1,128 @@
+@startuml TOGAF数据架构视图
+!theme plain
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontSize 11
+
+title TOGAF数据架构视图 - Apache Flink
+
+package "数据源层" {
+  component [Kafka] as Kafka
+  component [文件系统] as FileSystem
+  component [数据库] as Database
+  component [消息队列] as MessageQueue
+  component [流式数据源] as StreamSource
+}
+
+package "数据摄取层" {
+  component [Source Operators] as SourceOps
+  component [数据反序列化] as Deserialization
+  component [Schema Registry] as SchemaRegistry
+  component [Watermark生成] as WatermarkGen
+}
+
+package "数据处理层" {
+  component [数据转换] as Transformation
+  component [窗口操作] as Windowing
+  component [聚合操作] as Aggregation
+  component [状态计算] as StateComputation
+  component [CEP处理] as CEP
+}
+
+package "状态管理层" {
+  component [Keyed State] as KeyedState
+  component [Operator State] as OperatorState
+  component [Checkpoint存储] as CheckpointStorage
+  component [Savepoint存储] as SavepointStorage
+  component [状态后端] as StateBackend
+}
+
+package "数据输出层" {
+  component [Sink Operators] as SinkOps
+  component [数据序列化] as Serialization
+  component [结果存储] as ResultStorage
+}
+
+package "数据存储层" {
+  component [分布式存储] as DistributedStorage
+  component [对象存储] as ObjectStorage
+  component [数据库存储] as DBStorage
+  component [消息系统] as MessageSystem
+}
+
+' 数据源到摄取
+Kafka --> SourceOps
+FileSystem --> SourceOps
+Database --> SourceOps
+MessageQueue --> SourceOps
+StreamSource --> SourceOps
+
+' 摄取层内部
+SourceOps --> Deserialization
+SourceOps --> SchemaRegistry
+SourceOps --> WatermarkGen
+
+' 摄取到处理
+Deserialization --> Transformation
+WatermarkGen --> Windowing
+
+' 处理层内部
+Transformation --> Windowing
+Transformation --> Aggregation
+Transformation --> StateComputation
+Windowing --> Aggregation
+StateComputation --> CEP
+
+' 处理到状态管理
+StateComputation --> KeyedState
+StateComputation --> OperatorState
+KeyedState --> StateBackend
+OperatorState --> StateBackend
+StateBackend --> CheckpointStorage
+StateBackend --> SavepointStorage
+
+' 处理到输出
+Transformation --> SinkOps
+Aggregation --> SinkOps
+StateComputation --> SinkOps
+
+' 输出层
+SinkOps --> Serialization
+SinkOps --> ResultStorage
+
+' 输出到存储
+ResultStorage --> DistributedStorage
+ResultStorage --> ObjectStorage
+ResultStorage --> DBStorage
+ResultStorage --> MessageSystem
+
+' 状态存储
+CheckpointStorage --> DistributedStorage
+SavepointStorage --> DistributedStorage
+
+note right of WatermarkGen
+  生成Watermark用于
+  事件时间处理
+end note
+
+note right of StateBackend
+  支持内存、RocksDB、
+  文件系统等后端
+end note
+
+note right of CheckpointStorage
+  定期保存状态快照
+  用于故障恢复
+end note
+
+note right of SavepointStorage
+  手动触发的状态保存
+  用于版本升级和迁移
+end note
+
+note right of Serialization
+  支持多种序列化格式
+  (Avro, JSON, Protobuf等)
+end note
+
+@enduml
